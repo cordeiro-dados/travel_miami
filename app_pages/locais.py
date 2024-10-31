@@ -1,4 +1,5 @@
 import streamlit as st
+import uuid
 from db_functions import inserir_dados, visualizar_dados, atualizar_dados, deletar_dados  # Funções CRUD
 
 def app():
@@ -14,14 +15,15 @@ def app():
         cidade = st.text_input("Cidade")
         pais = st.text_input("País")
         if st.button("Salvar Local"):
+            local_id = str(uuid.uuid4())  # Gerar UUID para local_id
             inserir_dados(
-                "INSERT INTO Locais (nome, img_url, cidade, pais) VALUES (%s, %s, %s, %s)",
-                (nome_local, img_url, cidade, pais)
+                "INSERT INTO data_collect.db_datatv.locais (local_id, nome, img_url, cidade, pais) VALUES (?, ?, ?, ?, ?)",
+                (local_id, nome_local, img_url, cidade, pais)
             )
 
     elif acao == "Alterar":
         st.subheader("Alterar Local Existente")
-        locais = visualizar_dados("SELECT * FROM Locais")
+        locais = visualizar_dados("SELECT * FROM data_collect.db_datatv.locais")
         local_id = st.selectbox("Selecione o Local", [local[0] for local in locais])
 
         # Encontrar o local selecionado e preencher o formulário com os dados existentes
@@ -36,7 +38,7 @@ def app():
                 
                 if st.button("Atualizar Local"):
                     atualizar_dados(
-                        "UPDATE Locais SET nome=%s, img_url=%s, cidade=%s, pais=%s WHERE local_id=%s",
+                        "UPDATE data_collect.db_datatv.locais SET nome=?, img_url=?, cidade=?, pais=? WHERE local_id=?",
                         (nome_local, img_url, cidade, pais, local_id)
                     )
             else:
@@ -44,7 +46,7 @@ def app():
 
     elif acao == "Deletar":
         st.subheader("Deletar Local")
-        locais = visualizar_dados("SELECT * FROM Locais")
+        locais = visualizar_dados("SELECT * FROM data_collect.db_datatv.locais")
         local_id = st.selectbox("Selecione o Local para Deletar", [local[0] for local in locais])
         if st.button("Deletar Local"):
-            deletar_dados("DELETE FROM Locais WHERE local_id=%s", (local_id,))
+            deletar_dados("DELETE FROM data_collect.db_datatv.locais WHERE local_id=?", (local_id,))

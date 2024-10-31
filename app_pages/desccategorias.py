@@ -1,4 +1,5 @@
 import streamlit as st
+import uuid
 from db_functions import inserir_dados, visualizar_dados, atualizar_dados, deletar_dados
 
 def app():
@@ -8,8 +9,7 @@ def app():
     acao = st.selectbox("Escolha a ação", ["Inserir", "Alterar", "Deletar"])
 
     if acao == "Inserir":
-        # Formulário para inserir uma nova descrição de categoria
-        categorias = visualizar_dados("SELECT categoria_id, tipo FROM Categorias")
+        categorias = visualizar_dados("SELECT categoria_id, tipo FROM data_collect.db_datatv.categorias")
         categoria_id = st.selectbox("Selecione a Categoria", [cat[0] for cat in categorias], format_func=lambda x: dict(categorias)[x])
         tipo_desc = st.text_input("Tipo de Descrição")
         preco_diaria = st.number_input("Preço por Diária", min_value=0.0)
@@ -19,14 +19,18 @@ def app():
         link_url = st.text_input("Link URL para mais informações")
 
         if st.button("Salvar Descrição da Categoria"):
+            desc_id = str(uuid.uuid4())  # Gerar UUID para desc_id
             inserir_dados(
-                "INSERT INTO DescCategorias (categoria_id, tipo, preco_diaria, preco_total, total_dias, img_cat, link_url) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (categoria_id, tipo_desc, preco_diaria, preco_total, total_dias, img_cat, link_url)
+                "INSERT INTO data_collect.db_datatv.desccategorias (desc_id, categoria_id, tipo, preco_diaria, preco_total, total_dias, img_cat, link_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (desc_id, categoria_id, tipo_desc, preco_diaria, preco_total, total_dias, img_cat, link_url)
             )
 
     elif acao == "Alterar":
+        # Carregar categorias para o selectbox
+        categorias = visualizar_dados("SELECT categoria_id, tipo FROM data_collect.db_datatv.categorias")
+        
         # Selecionar descrição de categoria para editar
-        desccategorias = visualizar_dados("SELECT * FROM DescCategorias")
+        desccategorias = visualizar_dados("SELECT * FROM data_collect.db_datatv.desccategorias")
         desc_id = st.selectbox("Selecione a Descrição da Categoria", [desc[0] for desc in desccategorias])
 
         if desc_id:
@@ -48,14 +52,14 @@ def app():
 
                 if st.button("Atualizar Descrição da Categoria"):
                     atualizar_dados(
-                        "UPDATE DescCategorias SET categoria_id=%s, tipo=%s, preco_diaria=%s, preco_total=%s, total_dias=%s, img_cat=%s, link_url=%s WHERE desc_id=%s",
+                        "UPDATE data_collect.db_datatv.desccategorias SET categoria_id=?, tipo=?, preco_diaria=?, preco_total=?, total_dias=?, img_cat=?, link_url=? WHERE desc_id=?",
                         (categoria_id, tipo_desc, preco_diaria, preco_total, total_dias, img_cat, link_url, desc_id)
                     )
 
     elif acao == "Deletar":
         # Selecionar descrição de categoria para deletar
-        desccategorias = visualizar_dados("SELECT * FROM DescCategorias")
+        desccategorias = visualizar_dados("SELECT * FROM data_collect.db_datatv.desccategorias")
         desc_id = st.selectbox("Selecione a Descrição da Categoria para Deletar", [desc[0] for desc in desccategorias])
 
         if st.button("Deletar Descrição da Categoria"):
-            deletar_dados("DELETE FROM DescCategorias WHERE desc_id=%s", (desc_id,))
+            deletar_dados("DELETE FROM data_collect.db_datatv.desccategorias WHERE desc_id=?", (desc_id,))

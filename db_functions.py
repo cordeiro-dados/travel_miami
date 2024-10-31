@@ -2,16 +2,18 @@ import psycopg2
 import streamlit as st
 from dotenv import load_dotenv
 import os
+from databricks import sql
 
 load_dotenv()
+DB_SERVER_HOSTNAME = os.getenv("DB_SERVER_HOSTNAME")
+DB_HTTP_PATH = os.getenv("DB_HTTP_PATH")
+DB_ACCESS_TOKEN = os.getenv("DB_ACCESS_TOKEN")
 
 def conectar():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        database=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
+    return sql.connect(
+        server_hostname=DB_SERVER_HOSTNAME,
+        http_path=DB_HTTP_PATH,
+        access_token=DB_ACCESS_TOKEN
     )
 
 def inserir_dados(query, data):

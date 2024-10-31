@@ -1,4 +1,5 @@
 import streamlit as st
+import uuid
 from db_functions import inserir_dados, visualizar_dados, atualizar_dados, deletar_dados
 
 def app():
@@ -8,25 +9,24 @@ def app():
     acao = st.selectbox("Escolha a ação", ["Inserir", "Alterar", "Deletar"])
 
     if acao == "Inserir":
-        # Formulário para inserir uma nova atividade
-        locais = visualizar_dados("SELECT local_id, nome FROM Locais")
+        locais = visualizar_dados("SELECT local_id, nome FROM data_collect.db_datatv.locais")
         local_id = st.selectbox("Selecione o Local", [local[0] for local in locais], format_func=lambda x: dict(locais)[x])
         nome_atividade = st.text_input("Nome da Atividade")
         descricao = st.text_area("Descrição")
         preco_total = st.number_input("Preço Total", min_value=0.0)
         if st.button("Salvar Atividade"):
+            atividade_id = str(uuid.uuid4())  # Gerar UUID para atividade_id
             inserir_dados(
-                "INSERT INTO Atividades (local_id, nome, descricao, preco_total) VALUES (%s, %s, %s, %s)",
-                (local_id, nome_atividade, descricao, preco_total)
+                "INSERT INTO data_collect.db_datatv.atividades (atividade_id, local_id, nome, descricao, preco_total) VALUES (?, ?, ?, ?, ?)",
+                (atividade_id, local_id, nome_atividade, descricao, preco_total)
             )
 
     elif acao == "Alterar":
-        # Selecionar atividade para editar
-        atividades = visualizar_dados("SELECT * FROM Atividades")
+        atividades = visualizar_dados("SELECT * FROM data_collect.db_datatv.atividades")
         atividade_id = st.selectbox("Selecione a Atividade", [atividade[0] for atividade in atividades])
 
         if atividade_id:
-            # Pegar os valores da atividade selecionada para exibir no formulário
+            locais = visualizar_dados("SELECT local_id, nome FROM data_collect.db_datatv.locais")
             atividade_selecionada = next((atividade for atividade in atividades if atividade[0] == atividade_id), None)
             if atividade_selecionada:
                 local_id = st.selectbox(
@@ -41,14 +41,14 @@ def app():
 
                 if st.button("Atualizar Atividade"):
                     atualizar_dados(
-                        "UPDATE Atividades SET local_id=%s, nome=%s, descricao=%s, preco_total=%s WHERE atividade_id=%s",
+                        "UPDATE data_collect.db_datatv.atividades SET local_id=?, nome=?, descricao=?, preco_total=? WHERE atividade_id=?",
                         (local_id, nome_atividade, descricao, preco_total, atividade_id)
                     )
 
     elif acao == "Deletar":
         # Selecionar atividade para deletar
-        atividades = visualizar_dados("SELECT * FROM Atividades")
+        atividades = visualizar_dados("SELECT * FROM data_collect.db_datatv.atividades")
         atividade_id = st.selectbox("Selecione a Atividade para Deletar", [atividade[0] for atividade in atividades])
 
         if st.button("Deletar Atividade"):
-            deletar_dados("DELETE FROM Atividades WHERE atividade_id=%s", (atividade_id,))
+            deletar_dados("DELETE FROM data_collect.db_datatv.atividades WHERE atividade_id=?", (atividade_id,))
