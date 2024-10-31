@@ -29,11 +29,14 @@ def inserir_dados(query, data):
         cursor.close()
         conn.close()
 
-def visualizar_dados(query):
+def visualizar_dados(query, params=None):
     try:
         conn = conectar()
         cursor = conn.cursor()
-        cursor.execute(query)
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
         rows = cursor.fetchall()
         return rows
     except Exception as e:
@@ -41,6 +44,7 @@ def visualizar_dados(query):
     finally:
         cursor.close()
         conn.close()
+
 
 def atualizar_dados(query, data):
     try:
